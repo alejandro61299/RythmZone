@@ -1,10 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Core.Singleton;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Core
+namespace Core.SceneLoader
 {
     public class SceneLoader : SingletonBehaviour<SceneLoader>
     {

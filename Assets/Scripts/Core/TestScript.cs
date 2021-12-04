@@ -2,14 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Core;
+using Core.EventManager;
 using UnityEngine;
-using Event = Core.Event;
+using Event = Core.EventManager.Event;
+
 
 
 public class TestScript : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void OnEnable()
+    private void OnEnable()
     {
         EventManager.AddListener<TestEvent>(OnTest);
     }
@@ -18,15 +19,7 @@ public class TestScript : MonoBehaviour
     {
         EventManager.RemoveListener<TestEvent>(OnTest);
     }
-
-    private void OnDestroy()
-    {
-        
-    }
-
-
-    // Update is called once per frame
-    void Start()
+    private void Start()
     {
         EventManager.TriggerEvent(new TestEvent());
     }

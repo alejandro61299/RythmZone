@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Core.Singleton;
 
-namespace Core
+namespace Core.EventManager
 {
     public abstract class Event
     {

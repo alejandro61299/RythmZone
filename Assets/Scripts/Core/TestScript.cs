@@ -1,27 +1,21 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Core;
+using Core.Coroutines;
 using Core.EventManager;
 using UnityEngine;
-using Event = Core.EventManager.Event;
-
-
 
 public class TestScript : MonoBehaviour
 {
-    private void OnEnable()
+    private void Awake()
     {
-        EventManager.AddListener<TestEvent>(OnTest);
+        EventManager.Register<TestEvent>(OnTest);
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
-        EventManager.RemoveListener<TestEvent>(OnTest);
+        EventManager.Unregister<TestEvent>(OnTest);
     }
     private void Start()
     {
-        EventManager.TriggerEvent(new TestEvent());
+        EventManager.Trigger(new TestEvent());
     }
 
     private void OnTest(TestEvent eventData)
@@ -30,7 +24,7 @@ public class TestScript : MonoBehaviour
     }
 }
 
-public class TestEvent : Event
+public class TestEvent : EventData
 {
     
 }

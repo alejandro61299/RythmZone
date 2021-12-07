@@ -1,72 +1,52 @@
 using System;
 using System.Collections.Generic;
-using Core.Singleton;
+using Utils;
 
 namespace Core.EventManager
 {
-    public abstract class Event
+    public static class  EventManager
     {
-    };
+        public delegate void EventDelegate<in T>(T e) where T : EventData;
+        private delegate void EventDelegate(EventData eventData);
 
-    public class EventManager : SingletonBehaviour<EventManager>
-    {
-        public delegate void EventDelegate<T>(T e) where T : Event;
+        private static readonly Dictionary<Type, EventDelegate> _events = new();
+        private static readonly Dictionary<Delegate, EventDelegate> _delegates = new();
 
-        private delegate void EventDelegate(Event eventData);
-
-        private readonly Dictionary<Type, EventDelegate> _events = new();
-        private readonly Dictionary<Delegate, EventDelegate> _delegates = new();
-
-        public static void TriggerEvent(Event eventData)
+        public static void Trigger(EventData eventData)
         {
-            if (!IsInstanced) return;
-            if (!Instance._events.TryGetValue(eventData.GetType(), out EventDelegate eventDelegate)) return;
+            if (!_events.TryGetValue(eventData.GetType(), out EventDelegate eventDelegate)) return;
             eventDelegate?.Invoke(eventData);
         }
 
-        public static void AddListener<T>(EventDelegate<T> del) where T : Event
+        public static void Register<T>(EventDelegate<T> del) where T : EventData
         {
-            if (!IsInstanced) return;
-            if (Instance._delegates.ContainsKey(del)) return; // Already contained 
-
-            void NewDelegate(Event e) => del((T)e);
-            Instance._delegates[del] = NewDelegate;
-            bool found = Instance._events.TryGetValue(typeof(T), out EventDelegate dDelegate);
-            Instance._events[typeof(T)] = found ? dDelegate + NewDelegate : NewDelegate;
+            if (_delegates.ContainsKey(del)) return; // Already contained 
+            void NewDelegate(EventData e) => del((T)e);
+            _delegates[del] = NewDelegate;
+            bool found = _events.TryGetValue(typeof(T), out EventDelegate dDelegate);
+            _events[typeof(T)] = found ? dDelegate + NewDelegate : NewDelegate;
         }
 
-        public static void RemoveListener<T>(EventDelegate<T> del) where T : Event
+        public static void Unregister<T>(EventDelegate<T> del) where T : EventData
         {
-            if (!IsInstanced) return;
-            if (!Instance._delegates.TryGetValue(del, out EventDelegate foundDelegate)) return;
-            if (Instance._events.TryGetValue(typeof(T), out EventDelegate eventDelegate))
+            if (!_delegates.TryGetValue(del, out EventDelegate foundDelegate)) return;
+            if (_events.TryGetValue(typeof(T), out EventDelegate eventDelegate))
             {
                 eventDelegate -= foundDelegate;
-                if (eventDelegate.IsNull()) Instance._events.Remove(typeof(T));
-                else Instance._events[typeof(T)] = eventDelegate;
+                if (eventDelegate.Null()) _events.Remove(typeof(T));
+                else _events[typeof(T)] = eventDelegate;
             }
-
-            Instance._delegates.Remove(del);
-        }
-
-
-        public static void RemoveAllListeners()
-        {
-            if (!IsInstanced) return;
-            Instance._events.Clear();
-            Instance._delegates.Clear();
+            _delegates.Remove(del);
         }
         
-
-    }
-    
-    public static class ObjectExtension
-    {
-        public static bool IsNull(this object obj)
+        public static void RemoveAllListeners()
         {
-            return obj == null;
+            _events.Clear();
+            _delegates.Clear();
         }
     }
+    
+
 }
 
 

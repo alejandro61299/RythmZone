@@ -6,13 +6,21 @@
 /[Bb]uild/
 /[Bb]uilds/
 /[Ll]ogs/
+/[Ll]og/
 /[Aa]ssets/[Rr]esources.meta
+/[Uu]ser[Ss]ettings/
 
-# Never ignore
-/[Pp]ackages/*
-!/[Pp]ackages/manifest.json
-!/[Pp]ackages/packages-lock.json
-!/[Pp]ackages/packages-lock.git.json
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Ll]og/
+[Aa]ssets/[Rr]esources.meta
+[Uu]ser[Ss]ettings/
+
 
 # Visual Studio cache directory
 .vs/

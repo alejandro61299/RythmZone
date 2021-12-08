@@ -1,4 +1,4 @@
-﻿namespace Utils
+﻿namespace Utils.ObjectsExtension
 {
     public static class ObjectExtension
     {

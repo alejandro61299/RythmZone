@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Core.EventManager;
-using Game.Menu;
 using UnityEngine;
 
 namespace Game.UI
@@ -9,6 +8,9 @@ namespace Game.UI
     public class UIManager : MonoBehaviour
     {
         private readonly List<MenuUI> _menus = new ();
+
+        private void Awake() => DontDestroyOnLoad(gameObject);
+
         private void OnEnable()
         {
             EventManager.Register<OnMenuEnabled>(OnMenuEnabled);

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,6 +19,14 @@ namespace Core.Singleton
                 return _instance;
             }
         }
+
+        protected virtual void Awake()
+        {
+            if (IsInstanced && _instance != this)
+                Destroy(gameObject);
+        }
+
+        protected virtual void OnDestroy() {}
     }
 }
 

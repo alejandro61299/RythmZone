@@ -1,49 +1,56 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using Core.Singleton;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Utils;
+using Utils.ObjectsExtension;
 
 namespace Core.SceneLoader
 {
     public class SceneLoader : SingletonBehaviour<SceneLoader>
     {
-        public enum SceneID { MainMenu , Game, Test}
-
+        public enum SceneID { MainMenu , SampleScene, Test}
         public static event Action OnStartLoad;
         public static event Action OnCompleteLoad;
-        public static event Action<float> OnUpdateLoadProgression;
-        
-        private readonly WaitForSeconds _waitForProgressionEvent = new (0.2f);
+        public static event Action<float> OnUpdateProgression;
+
+        private AsyncOperation _operation;
         
         public static void LoadScene(SceneID sceneID)
         {
-            if (!IsInstanced) return;
+            if (!IsInstanced || !Instance._operation.Null()) return;
             Instance.StartCoroutine(Instance.StartLoad(sceneID));
+        }
+
+        public static void ActiveScene()
+        {
+            if (!IsInstanced || Instance._operation.Null()) return;
+            Instance._operation.allowSceneActivation = true;
         }
         
         private IEnumerator StartLoad(SceneID sceneID)
         {
-            AsyncOperation operation = SceneManager.LoadSceneAsync(sceneID.ToString());
-            operation.completed += CompletedLoad;
             OnStartLoad?.Invoke();
-            yield return OnLoadScene(operation);
+            _operation = SceneManager.LoadSceneAsync(sceneID.ToString());
+            _operation.allowSceneActivation = false;
+            _operation.completed += CompletedLoad;
+            yield return OnLoadScene();
         }
 
         private void CompletedLoad(AsyncOperation operation)
         {
             operation.completed -= CompletedLoad;
+            _operation = null;
             OnCompleteLoad?.Invoke();
         }
-        private IEnumerator OnLoadScene(AsyncOperation operation)
+        private IEnumerator OnLoadScene()
         {
-            while (!operation.isDone)
+            while (!_operation.isDone)
             {
-                OnUpdateLoadProgression?.Invoke(operation.progress);
-                yield return _waitForProgressionEvent;
+                OnUpdateProgression?.Invoke(_operation.progress);
+                yield return null;
             }
         }
-        
     }
 }

@@ -9,20 +9,21 @@ using Object = UnityEngine.Object;
 
 namespace Tools.AddressableGenerator
 {
-    public class AddressableGeneratorWindow : EditorWindow
+    public class AddressableGenerator : EditorWindow
     {
-        private static readonly string WINDOW_NAME =
-            "Addressable Generator";
+        private const string WINDOW_NAME = "Addressable Generator";
+        private const string MENU_PATH = "Tools/Addressable Generator";
+        [MenuItem(MENU_PATH)] static void ShowWindow() => GetWindow<AddressableGenerator>(WINDOW_NAME);
+        
+        private bool _hasToBuild;
+        private bool _autoBuild;
         
         private readonly Dictionary<string, string> _groupPath = new()
         {
             ["Levels"] = "Assets/Prefabs/Game/Levels",
             ["Menus"]  = "Assets/Prefabs/Game/Menus",
         };
-
-        private bool _hasToBuild;
-        private bool _autoBuild;
-        private void ToBuild() => _hasToBuild = true;
+        
         private void OnGUI()
         {
             EditorGUILayout.Space();
@@ -39,6 +40,7 @@ namespace Tools.AddressableGenerator
             foreach (var groupName in _groupPath.Keys)
                 GenerateAddressableGroup(groupName,  _groupPath[groupName]);
         }
+        
         private void GenerateAddressableButtons()
         {
             foreach (var groupName in _groupPath.Keys)
@@ -57,13 +59,15 @@ namespace Tools.AddressableGenerator
             string[] paths = Directory.GetFiles(directory, "*.prefab", SearchOption.AllDirectories);
 
             foreach (var path in paths)
-            {
-                Object prefab = AssetDatabase.LoadAssetAtPath(path, typeof(GameObject));
-                if (prefab is not GameObject gameObject) continue;
-                gameObject.CreateAddressable(groupName, gameObject.name);
-            }
-            
-            ToBuild();
+                CreateAddressable(groupName, path);
+            _hasToBuild = true;
+        }
+
+        private void CreateAddressable(string groupName,string path)
+        {
+            Object prefab = AssetDatabase.LoadAssetAtPath(path, typeof(GameObject));
+            if (prefab is not GameObject gameObject) return;
+            gameObject.CreateAddressable(groupName, gameObject.name);
         }
 
         private void ToggleAutoBuild()
@@ -77,14 +81,6 @@ namespace Tools.AddressableGenerator
             AddressableExtension.BuildAddressable();
             _hasToBuild = false;
         }
-        
-
-        [MenuItem("Tools/Addressable Generator")]
-        public static void ShowWindow()
-        {
-            GetWindow<AddressableGeneratorWindow>(WINDOW_NAME);
-        }
-
     }
 }
 

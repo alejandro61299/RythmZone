@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Core.DataFiles
 {
-    public class DataFileUtils
+    public static class DataFileUtils
     {
         public static void SaveFile(string filePath, DataFile dataFile)
         {

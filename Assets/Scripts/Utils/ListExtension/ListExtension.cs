@@ -5,6 +5,8 @@ namespace Utils.ListExtension
 {
     public static class ListExtension
     {
+        public static bool IsEmpty<T>(this List<T> list) => list.Count == 0;
+        
         public static void Add<T>(this List<T> list, T value, int amount)
         {
             for (int i = 0; i < amount; i++)

@@ -1,10 +1,12 @@
 ﻿#if UNITY_EDITOR
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 using Utils.AddressableExtension;
+using Utils.AssetsExtension;
 using Object = UnityEngine.Object;
 
 namespace Tools.AddressableGenerator
@@ -13,17 +15,19 @@ namespace Tools.AddressableGenerator
     {
         private const string WINDOW_NAME = "Addressable Generator";
         private const string MENU_PATH = "Tools/Addressable Generator";
+        private const string SCRIPTABLE_PATH = "Assets/ScriptableObjects/Tools/AddressableGenerator/AddressablesContainer.asset";
         [MenuItem(MENU_PATH)] static void ShowWindow() => GetWindow<AddressableGenerator>(WINDOW_NAME);
         
+        private AddressablesContainer _container;
         private bool _hasToBuild;
         private bool _autoBuild;
+        private List<AddressableInfo> AddressableInfos => _container.AddressableInfos;
         
-        private readonly Dictionary<string, string> _groupPath = new()
+        private void OnEnable()
         {
-            ["Levels"] = "Assets/Prefabs/Game/Levels",
-            ["Menus"]  = "Assets/Prefabs/Game/Menus",
-        };
-        
+            _container = AssetDatabase.LoadAssetAtPath<AddressablesContainer>(SCRIPTABLE_PATH);
+        }
+
         private void OnGUI()
         {
             EditorGUILayout.Space();
@@ -37,29 +41,30 @@ namespace Tools.AddressableGenerator
         private void GenerateAllAddressableButtons()
         {
             if (!GUILayout.Button("All")) return;
-            foreach (var groupName in _groupPath.Keys)
-                GenerateAddressableGroup(groupName,  _groupPath[groupName]);
+            foreach (var info in AddressableInfos)
+                GenerateAddressableGroup(info);
         }
         
         private void GenerateAddressableButtons()
         {
-            foreach (var groupName in _groupPath.Keys)
-                GenerateGroupButton(groupName);
+            foreach (var info in AddressableInfos)
+                GenerateGroupButton(info);
         }
         
-        private void GenerateGroupButton(string groupName)
+        private void GenerateGroupButton(AddressableInfo info)
         {
-            if (!GUILayout.Button(groupName)) return;
-            GenerateAddressableGroup(groupName, _groupPath[groupName]);
+            if (!GUILayout.Button(info.GroupName)) return;
+            GenerateAddressableGroup(info);
         }
 
-        private void GenerateAddressableGroup(string groupName,  string directory)
+        private void GenerateAddressableGroup(AddressableInfo info)
         {
-            AddressableExtension.RemoveGroup(groupName);
-            string[] paths = Directory.GetFiles(directory, "*.prefab", SearchOption.AllDirectories);
+            AddressableExtension.RemoveGroup(info.GroupName);
+            string searchPatter = AssetsExtension.GetSearchPattern(info.AssetsType);
+            string[] paths = Directory.GetFiles(info.Path, searchPatter, SearchOption.AllDirectories);
 
             foreach (var path in paths)
-                CreateAddressable(groupName, path);
+                CreateAddressable(info.GroupName, path);
             _hasToBuild = true;
         }
 

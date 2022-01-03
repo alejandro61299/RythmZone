@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using Utils.ListExtension;
 
 namespace Game.UI
 {
-    public class ElementUI : MonoBehaviour
+    public class UIElement : MonoBehaviour
     {
         protected bool Show
         {

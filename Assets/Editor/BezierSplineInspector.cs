@@ -5,10 +5,10 @@ using UnityEngine;
 [CustomEditor(typeof(BezierSpline))]
 public class BezierSplineInspector : Editor {
 
-	private const int stepsPerCurve = 10;
-	private const float directionScale = 0.5f;
-	private const float handleSize = 0.04f;
-	private const float pickSize = 0.06f;
+	private const int DISPLAY_STEPS = 10;
+	private const float DIRECTION_MAGNITUDE = 0.5f;
+	private const float HANDLE_SIZE = 0.1f;
+	private const float PICK_SIZE = 0.12f;
 
 	private static Color[] modeColors = {
 		Color.white,
@@ -50,7 +50,7 @@ public class BezierSplineInspector : Editor {
 			spline.SetControlPoint(selectedIndex, point);
 		}
 		EditorGUI.BeginChangeCheck();
-		BezierControlPointMode mode = (BezierControlPointMode)EditorGUILayout.EnumPopup("Mode", spline.GetControlPointMode(selectedIndex));
+		BezierPointMode mode = (BezierPointMode)EditorGUILayout.EnumPopup("Mode", spline.GetControlPointMode(selectedIndex));
 		if (EditorGUI.EndChangeCheck()) {
 			Undo.RecordObject(spline, "Change Point Mode");
 			spline.SetControlPointMode(selectedIndex, mode);
@@ -83,11 +83,11 @@ public class BezierSplineInspector : Editor {
 	private void ShowDirections () {
 		Handles.color = Color.green;
 		Vector3 point = spline.GetPoint(0f);
-		Handles.DrawLine(point, point + spline.GetDirection(0f) * directionScale);
-		int steps = stepsPerCurve * spline.CurveCount;
+		Handles.DrawLine(point, point + spline.GetDirection(0f) * DIRECTION_MAGNITUDE);
+		int steps = DISPLAY_STEPS * spline.CurveCount;
 		for (int i = 1; i <= steps; i++) {
 			point = spline.GetPoint(i / (float)steps);
-			Handles.DrawLine(point, point + spline.GetDirection(i / (float)steps) * directionScale);
+			Handles.DrawLine(point, point + spline.GetDirection(i / (float)steps) * DIRECTION_MAGNITUDE);
 		}
 	}
 
@@ -98,7 +98,7 @@ public class BezierSplineInspector : Editor {
 			size *= 2f;
 		}
 		Handles.color = modeColors[(int)spline.GetControlPointMode(index)];
-		if (Handles.Button(point, handleRotation, size * handleSize, size * pickSize, Handles.DotHandleCap)) {
+		if (Handles.Button(point, handleRotation, size * HANDLE_SIZE, size * PICK_SIZE, Handles.DotHandleCap)) {
 			selectedIndex = index;
 			Repaint();
 		}

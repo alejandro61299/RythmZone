@@ -9,7 +9,7 @@ namespace Bezier
 		private Vector3[] points;
 
 		[SerializeField]
-		private BezierControlPointMode[] modes;
+		private BezierPointMode[] modes;
 
 		[SerializeField]
 		private bool loop;
@@ -69,11 +69,11 @@ namespace Bezier
 			EnforceMode(index);
 		}
 
-		public BezierControlPointMode GetControlPointMode (int index) {
+		public BezierPointMode GetControlPointMode (int index) {
 			return modes[(index + 1) / 3];
 		}
 
-		public void SetControlPointMode (int index, BezierControlPointMode mode) {
+		public void SetControlPointMode (int index, BezierPointMode mode) {
 			int modeIndex = (index + 1) / 3;
 			modes[modeIndex] = mode;
 			if (loop) {
@@ -89,8 +89,8 @@ namespace Bezier
 
 		private void EnforceMode (int index) {
 			int modeIndex = (index + 1) / 3;
-			BezierControlPointMode mode = modes[modeIndex];
-			if (mode == BezierControlPointMode.Free || !loop && (modeIndex == 0 || modeIndex == modes.Length - 1)) {
+			BezierPointMode mode = modes[modeIndex];
+			if (mode == BezierPointMode.Free || !loop && (modeIndex == 0 || modeIndex == modes.Length - 1)) {
 				return;
 			}
 
@@ -119,7 +119,7 @@ namespace Bezier
 
 			Vector3 middle = points[middleIndex];
 			Vector3 enforcedTangent = middle - points[fixedIndex];
-			if (mode == BezierControlPointMode.Aligned) {
+			if (mode == BezierPointMode.Aligned) {
 				enforcedTangent = enforcedTangent.normalized * Vector3.Distance(middle, points[enforcedIndex]);
 			}
 			points[enforcedIndex] = middle + enforcedTangent;
@@ -193,9 +193,9 @@ namespace Bezier
 				new Vector3(3f, 0f, 0f),
 				new Vector3(4f, 0f, 0f)
 			};
-			modes = new BezierControlPointMode[] {
-				BezierControlPointMode.Free,
-				BezierControlPointMode.Free
+			modes = new BezierPointMode[] {
+				BezierPointMode.Free,
+				BezierPointMode.Free
 			};
 		}
 	}

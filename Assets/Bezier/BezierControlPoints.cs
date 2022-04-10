@@ -1,68 +1,46 @@
 using System;
+using Bezier.ModeDriver;
+using Bezier.Points;
 using UnityEngine;
 
 namespace Bezier
 {
     [Serializable]
     public class BezierControlPoints
-    {
-        [SerializeField] private MyBezierSpline _bezier;
-        [SerializeField] private BezierPointMode _mode;
-        [SerializeField] private BezierPoint _positionPoint;
-        [SerializeField] private BezierPoint _tangent0Point;
-        [SerializeField] private BezierPoint _tangent1Point;
+    { 
+        private BezierPointMode _mode;
         [SerializeField] private bool _isFirst;
         [SerializeField] private bool _isLast;
         
+        private BezierMainPoint _main;
+        private BezierTangent0Point _tangent0;
+        private BezierTangent1Point _tangent1;
+        private BezierControlPointModeDriver _modeDriver;
+        
         public BezierPointMode Mode => _mode;
-        public Vector3 Position => _positionPoint.Position;
-        public Vector3 Tangent0 => _tangent0Point.Position;
-        public Vector3 Tangent1 => _tangent1Point.Position;
-        
-        public BezierPoint PositionPoint => _positionPoint;
-        public BezierPoint Tangent0Point => _tangent0Point;
-        public BezierPoint Tangent1Point => _tangent1Point;
-        
+
+        public BezierMainPoint Main => _main;
+        public BezierTangent0Point Tangent0 => _tangent0;
+        public BezierTangent1Point Tangent1 => _tangent1;
         public bool IsFirst => _isFirst;
         public bool IsLast => _isLast;
 
         public BezierControlPoints(bool isFirst = false , bool isLast = false)
         {
+
             _isFirst = isFirst;
             _isLast = isLast; 
-            _positionPoint = new BezierPositionPoint(this);
-            _tangent0Point =new BezierTangent0Point(this);
-            _tangent1Point = new BezierTangent1Point(this);
-            SetTangent0(Vector3.left);
-            SetTangent1(Vector3.right);
-        }
-        
-        public void SetPoint(Vector3 position)
-        {
-            Vector3 delta = position - _positionPoint.Position;;
-            _positionPoint.Position = position;
-            MoveTangents(delta);
-        }
+            _main = new BezierMainPoint(this);
+            _tangent0 =new BezierTangent0Point(this);
+            _tangent1 = new BezierTangent1Point(this);
+            _modeDriver = BezierControlPointModeDriver.InstantiateDriver(this);
 
-        private void MoveTangents(Vector3 delta)
-        {
-            _tangent0Point.Position += delta;
-            _tangent1Point.Position += delta;
-        }
-
-        public void SetTangent0(Vector3 position)
-        {
-            _tangent0Point.Position = position;
-        }
-        
-        public void SetTangent1(Vector3 position)
-        {
-            _tangent1Point.Position = position;
         }
 
         public void SetMode(BezierPointMode mode)
         {
             _mode = mode;
+            _modeDriver = BezierControlPointModeDriver.InstantiateDriver(this, _modeDriver);
         }
     }
 }

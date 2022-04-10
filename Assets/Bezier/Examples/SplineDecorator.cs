@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bezier
+namespace Bezier.Examples
 {
 	public class SplineDecorator : MonoBehaviour {
 

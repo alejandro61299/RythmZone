@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using Bezier.Points;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,20 +12,24 @@ namespace Bezier
     
     public class MyBezierSplineInspector : Editor
     {
-        private const int DISPLAY_STEPS = 10;
+        private const int DISPLAY_STEPS = 5;
         private const float DIRECTION_MAGNITUDE = 0.5f;
         private const float HANDLE_SIZE = 0.1f;
         private const float PICK_SIZE = 0.12f;
-
-
-        private MyBezierSpline _bezier;
-        private Transform _handleTransform;
-        private Quaternion _handleRotation;
-        private BezierPoint _selectedPoint;
         
-        public override void OnInspectorGUI () 
+        private MyBezierSpline _bezier;
+        private Transform _bezierTransform;
+        private Quaternion _bezierRotation;
+        private BezierPoint _selectedPoint;
+
+
+        private void OnEnable()
         {
             _bezier = (MyBezierSpline)target;
+        }
+
+        public override void OnInspectorGUI () 
+        {
             EditorGUI.BeginChangeCheck();
             bool loop = EditorGUILayout.Toggle("Loop", _bezier.Loop);
             if (EditorGUI.EndChangeCheck()) {
@@ -53,7 +58,7 @@ namespace Bezier
             {
                 Undo.RecordObject(_bezier, "Move Point");
                 EditorUtility.SetDirty(_bezier);
-                _selectedPoint.Position = point;
+                _selectedPoint.SetPoint(point);
             }
             
             EditorGUI.BeginChangeCheck();
@@ -67,16 +72,15 @@ namespace Bezier
         
         private void OnSceneGUI ()
         {
-            _bezier = (MyBezierSpline)target;
-            UpdateHandle();
+            UpdateTransform();
             BezierSplineGUI();
         }
 
-        private void UpdateHandle()
+        private void UpdateTransform()
         {
-            _handleTransform = _bezier.transform;
-            _handleRotation =  UnityEditor.Tools.pivotRotation == PivotRotation.Local 
-                ? _handleTransform.rotation 
+            _bezierTransform = _bezier.Transform;
+            _bezierRotation =  UnityEditor.Tools.pivotRotation == PivotRotation.Local 
+                ? _bezierTransform.rotation 
                 : Quaternion.identity;
         }
 
@@ -107,20 +111,18 @@ namespace Bezier
             
             BezierDirectionsDraw();
         }
-
-
-        private void BezierTangentsDraw(BezierControlPoints points)
+        
+        private void BezierTangentsDraw(BezierControlPoints bezierPoints)
         {
-            Vector3 position = _handleTransform.TransformPoint(points.Position);
-            Vector3 tangent0 = _handleTransform.TransformPoint(points.Tangent0);
-            Vector3 tangent1 = _handleTransform.TransformPoint(points.Tangent1); 
-                
-            if (!points.IsFirst && !_bezier.Loop)
+            Vector3 position = _bezierTransform.TransformPoint(bezierPoints.Main.Position);
+            Vector3 tangent0 = _bezierTransform.TransformPoint(bezierPoints.Tangent0.Position);
+            Vector3 tangent1 = _bezierTransform.TransformPoint(bezierPoints.Tangent1.Position);
+            
+            if (_bezier.Loop || !_bezier.Loop && !bezierPoints.IsFirst)
             {
                 Handles.DrawLine(tangent0, position);
             }
-
-            if (!points.IsLast && !_bezier.Loop)
+            if (_bezier.Loop || !_bezier.Loop && !bezierPoints.IsLast)
             {
                 Handles.DrawLine(tangent1, position);
             }
@@ -128,11 +130,11 @@ namespace Bezier
         
         private void BezierCurveDraw(BezierControlPoints startPoints, BezierControlPoints endPoints)
         {
-            Vector3 startPosition = _handleTransform.TransformPoint(startPoints.Position);
-            Vector3 endPosition = _handleTransform.TransformPoint(endPoints.Position);
-            Vector3 startTangent = _handleTransform.TransformPoint(startPoints.Tangent1); 
-            Vector3 endTangent = _handleTransform.TransformPoint(endPoints.Tangent0);
-            
+            Vector3 startPosition = _bezierTransform.TransformPoint(startPoints.Main.Position);
+            Vector3 endPosition = _bezierTransform.TransformPoint(endPoints.Main.Position);
+            Vector3 startTangent = _bezierTransform.TransformPoint(startPoints.Tangent1.Position); 
+            Vector3 endTangent = _bezierTransform.TransformPoint(endPoints.Tangent0.Position);
+             
             Handles.color = Color.gray;
             Handles.DrawBezier(startPosition, endPosition, startTangent, endTangent, Color.white, null, 2f);
         }
@@ -140,13 +142,12 @@ namespace Bezier
         private void BezierDirectionsDraw () 
         {
             Handles.color = Color.green;
-            Vector3 point = _bezier.GetPosition(0f);
-            Handles.DrawLine(point, point + _bezier.GetDirection(0f) * DIRECTION_MAGNITUDE);
+
             int steps = DISPLAY_STEPS * _bezier.PointsCount();
                 
             for (int i = 1; i <= steps; i++) 
             {
-                point = _bezier.GetPosition(i / (float)steps);
+                Vector3 point = _bezier.GetPosition(i / (float)steps);
                 Handles.DrawLine(point, point + _bezier.GetDirection(i / (float)steps) * DIRECTION_MAGNITUDE);
             }
         }
@@ -158,26 +159,25 @@ namespace Bezier
 
         private void BezierControlPointsDraw(BezierControlPoints bezierPoints)
         {
-            BezierPointGizmoDraw(bezierPoints.PositionPoint);
+            BezierPointGizmoDraw(bezierPoints.Main);
             
-            if (!bezierPoints.IsFirst && !_bezier.Loop)
+            if (_bezier.Loop || !_bezier.Loop && !bezierPoints.IsFirst)
             {
-                BezierPointGizmoDraw(bezierPoints.Tangent0Point);
+                BezierPointGizmoDraw(bezierPoints.Tangent0);
             }
-
-            if (!bezierPoints.IsLast && !_bezier.Loop)
+            if (_bezier.Loop || !_bezier.Loop && !bezierPoints.IsLast)
             {
-                BezierPointGizmoDraw(bezierPoints.Tangent1Point);
+                BezierPointGizmoDraw(bezierPoints.Tangent1);
             }
         }
 
         private void BezierPointGizmoDraw(BezierPoint point)
         {
-            Vector3 gizmoPosition = _handleTransform.TransformPoint(point.Position);
+            Vector3 gizmoPosition = _bezierTransform.TransformPoint(point.Position);
             float size = HandleUtility.GetHandleSize(gizmoPosition);
             Handles.color = point.Color;
             
-            if (Handles.Button(gizmoPosition, _handleRotation, size * HANDLE_SIZE, size * PICK_SIZE, Handles.DotHandleCap))
+            if (Handles.Button(gizmoPosition, _bezierRotation, size * HANDLE_SIZE, size * PICK_SIZE, Handles.DotHandleCap))
             {
                 _selectedPoint = point;
                 Repaint();
@@ -189,7 +189,7 @@ namespace Bezier
             }
             
             EditorGUI.BeginChangeCheck();
-            gizmoPosition = Handles.DoPositionHandle(gizmoPosition, _handleRotation);
+            gizmoPosition = Handles.DoPositionHandle(gizmoPosition, _bezierRotation);
 
             if (!EditorGUI.EndChangeCheck())
             {
@@ -198,7 +198,7 @@ namespace Bezier
             
             Undo.RecordObject(_bezier, "Move Point");
             EditorUtility.SetDirty(_bezier);
-            point.Position = _handleTransform.InverseTransformPoint(gizmoPosition);
+            point.SetPoint(_bezierTransform.InverseTransformPoint(gizmoPosition));
         }
     }
 }

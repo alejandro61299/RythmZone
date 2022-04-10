@@ -2,23 +2,8 @@
 
 namespace Bezier
 {
-	public static class BezierUtils {
-
-		public static Vector3 GetPoint (Vector3 p0, Vector3 p1, Vector3 p2, float t) {
-			t = Mathf.Clamp01(t);
-			float oneMinusT = 1f - t;
-			return
-				oneMinusT * oneMinusT * p0 +
-				2f * oneMinusT * t * p1 +
-				t * t * p2;
-		}
-
-		public static Vector3 GetFirstDerivative (Vector3 p0, Vector3 p1, Vector3 p2, float t) {
-			return
-				2f * (1f - t) * (p1 - p0) +
-				2f * t * (p2 - p1);
-		}
-
+	public static class BezierUtils 
+	{
 		public static Vector3 GetPoint (Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
 			t = Mathf.Clamp01(t);
 			float OneMinusT = 1f - t;
@@ -31,7 +16,12 @@ namespace Bezier
 
 		public static Vector3 GetPoint(BezierControlPoints startPoint, BezierControlPoints endPoint, float percent)
 		{
-			return GetPoint(startPoint.Position, startPoint.Tangent1, endPoint.Tangent0, endPoint.Position, percent);
+			return GetPoint(
+				startPoint.Main.Position, 
+				startPoint.Tangent1.Position, 
+				endPoint.Tangent0.Position, 
+				endPoint.Main.Position, 
+				percent);
 		}
 
 		public static Vector3 GetFirstDerivative (Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
@@ -45,7 +35,12 @@ namespace Bezier
 		
 		public static Vector3 GetFirstDerivative(BezierControlPoints startPoint, BezierControlPoints endPoint, float percent)
 		{
-			return GetFirstDerivative(startPoint.Position, startPoint.Tangent1, endPoint.Tangent0, endPoint.Position, percent);
+			return GetFirstDerivative(
+				startPoint.Main.Position,
+				startPoint.Tangent1.Position,
+				endPoint.Tangent0.Position,
+				endPoint.Main.Position,
+				percent);
 		}
 	}
 }

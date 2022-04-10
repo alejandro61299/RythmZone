@@ -1,4 +1,4 @@
-﻿namespace Bezier
+﻿namespace Bezier.Examples
 {
 	public enum SplineWalkerMode {
 		Once,

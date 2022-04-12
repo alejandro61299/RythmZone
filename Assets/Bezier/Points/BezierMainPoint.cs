@@ -3,11 +3,12 @@ using UnityEngine;
 
 namespace Bezier.Points
 {
+    [Serializable]
     public class BezierMainPoint : BezierPoint
     {
-        public BezierMainPoint(BezierControlPoints points) : base(points)
+        public BezierMainPoint(BezierControlPoint point) : base(point)
         {
-            _color = Color.yellow;
+            _color = Color.yellow; 
         }
     }
 }

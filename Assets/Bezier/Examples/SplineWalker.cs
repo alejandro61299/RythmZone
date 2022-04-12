@@ -39,7 +39,7 @@ namespace Bezier.Examples
 				}
 			}
 
-			Vector3 position = spline.GetPoint(progress);
+			Vector3 position = spline.GetPosition(progress);
 			transform.localPosition = position;
 			if (lookForward) {
 				transform.LookAt(position + spline.GetDirection(progress));

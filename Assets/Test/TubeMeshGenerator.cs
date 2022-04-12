@@ -1,14 +1,9 @@
-// Author: Mathias Soeholm
-// Date: 05/10/2016
-// No license, do whatever you want with this script
-
-using System.Linq;
 using UnityEngine;
 
 namespace Test
 {
 	[ExecuteInEditMode]
-	public class TubeRenderer : MonoBehaviour
+	public class TubeMeshGenerator : MonoBehaviour
 	{
 		[SerializeField] private int _sides;
 		[SerializeField] private float _radiusOne;
@@ -50,27 +45,15 @@ namespace Test
 			_meshRenderer.enabled = false;
 		}
 
-		void Update ()
-		{
-			UpdatePositions();
-			GenerateMesh();
-		}
-
 		private void OnValidate()
 		{
 			_sides = Mathf.Max(3, _sides);
 		}
 
-		private void UpdatePositions()
-		{ 
-			RendererPoint[] points = GetComponentsInChildren<RendererPoint>();
-
-			if (points == null)
-			{
-				return;
-			}
-			
-			_positions = points.Select(item => item.GetPosition()).ToArray();
+		public void SetPositions(Vector3[] positions)
+		{
+			_positions = positions;
+			GenerateMesh();
 		}
 
 		private void GenerateMesh()
@@ -86,8 +69,8 @@ namespace Test
 			{
 				_vertices = new Vector3[verticesLength];
 
-				var indices = GenerateIndices();
-				var uvs = GenerateUVs();
+				int[] indices = GenerateIndices();
+				Vector2[] uvs = GenerateUVs();
 
 				if (verticesLength > _mesh.vertexCount)
 				{

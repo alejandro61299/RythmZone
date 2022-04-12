@@ -26,7 +26,7 @@ namespace Bezier.Examples
 			for (int p = 0, f = 0; f < frequency; f++) {
 				for (int i = 0; i < items.Length; i++, p++) {
 					Transform item = Instantiate(items[i]) as Transform;
-					Vector3 position = spline.GetPoint(p * stepSize);
+					Vector3 position = spline.GetPosition(p * stepSize);
 					item.transform.localPosition = position;
 					if (lookForward) {
 						item.transform.LookAt(position + spline.GetDirection(p * stepSize));

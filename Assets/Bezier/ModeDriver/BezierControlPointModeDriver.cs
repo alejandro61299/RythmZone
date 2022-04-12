@@ -5,47 +5,47 @@ namespace Bezier.ModeDriver
 {
     public abstract class BezierControlPointModeDriver
     {
-        protected readonly BezierControlPoints _controlPoints;
+        protected readonly BezierControlPoint controlPoint;
 
-        protected BezierControlPointModeDriver(BezierControlPoints controlPoints)
+        protected BezierControlPointModeDriver(BezierControlPoint controlPoint)
         {
-            _controlPoints = controlPoints;
+            this.controlPoint = controlPoint;
         }
         
         private void Initialize()
         {
-            _controlPoints.Main.OnPreChangePosition += DriveTangents;
-            _controlPoints.Tangent0.OnPreChangePosition += DriveTangent1;
-            _controlPoints.Tangent1.OnPreChangePosition += DriveTangent0;
+            controlPoint.Main.OnPreChangePosition += DriveTangents;
+            controlPoint.Tangent0.OnPreChangePosition += DriveTangent1;
+            controlPoint.Tangent1.OnPreChangePosition += DriveTangent0;
         }
 
         private void Terminate()
         {
-            _controlPoints.Main.OnPreChangePosition -= DriveTangents;
-            _controlPoints.Tangent0.OnPreChangePosition -= DriveTangent1;
-            _controlPoints.Tangent1.OnPreChangePosition -= DriveTangent0;
+            controlPoint.Main.OnPreChangePosition -= DriveTangents;
+            controlPoint.Tangent0.OnPreChangePosition -= DriveTangent1;
+            controlPoint.Tangent1.OnPreChangePosition -= DriveTangent0;
         }
         
         private void DriveTangents(Vector3 newMainPosition)
         {
-            Vector3 delta = newMainPosition - _controlPoints.Main.Position;
-            _controlPoints.Tangent0.Position += delta;
-            _controlPoints.Tangent1.Position += delta;
+            Vector3 delta = newMainPosition - controlPoint.Main.Position;
+            controlPoint.Tangent0.Position += delta;
+            controlPoint.Tangent1.Position += delta;
         }
         
         protected abstract void DriveTangent0(Vector3 newPosition);
         
         protected abstract void DriveTangent1(Vector3 newPosition);
         
-        public static BezierControlPointModeDriver  InstantiateDriver(BezierControlPoints controlPoints, BezierControlPointModeDriver driver = null)
+        public static BezierControlPointModeDriver  InstantiateDriver(BezierControlPoint controlPoint, BezierControlPointModeDriver driver = null)
         {
             driver?.Terminate();
             
-            driver = controlPoints.Mode switch
+            driver = controlPoint.Mode switch
             {
-                BezierPointMode.Free => new BezierControlPointFreeModeDriver(controlPoints),
-                BezierPointMode.Aligned => new BezierControlPointAlignedModeDriver(controlPoints),
-                BezierPointMode.Mirrored => new BezierControlPointMirroredModeDriver(controlPoints),
+                BezierPointMode.Free => new BezierControlPointFreeModeDriver(controlPoint),
+                BezierPointMode.Aligned => new BezierControlPointAlignedModeDriver(controlPoint),
+                BezierPointMode.Mirrored => new BezierControlPointMirroredModeDriver(controlPoint),
                 _ => throw new ArgumentOutOfRangeException()
             };
             

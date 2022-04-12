@@ -3,24 +3,24 @@ using UnityEngine;
 
 namespace Bezier.Points
 {
+    [Serializable]
     public abstract class BezierPoint
     {
-        private readonly BezierControlPoints _controlPoints;
+        private readonly BezierControlPoint _controlPoint;
+        [SerializeField] public Vector3 Position;
         protected Color _color;
         protected float _size;
         
         public Color Color => _color;
-        public Vector3 Position { get; set;}
-        public BezierControlPoints ControlPoints => _controlPoints;
+        public BezierControlPoint ControlPoint => _controlPoint;
         public float Size => _size;
         public event Action<Vector3> OnPreChangePosition;
 
-        protected BezierPoint(BezierControlPoints controlPoints)
+        protected BezierPoint(BezierControlPoint controlPoint)
         {
-            _controlPoints = controlPoints;
-            Position = Vector3.zero;
-        }
-
+            _controlPoint = controlPoint;
+        } 
+ 
         public void SetPoint(Vector3 position)
         {
             OnPreChangePosition?.Invoke(position);

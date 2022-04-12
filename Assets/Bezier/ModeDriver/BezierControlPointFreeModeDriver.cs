@@ -4,7 +4,7 @@ namespace Bezier.ModeDriver
 {
     public class BezierControlPointFreeModeDriver : BezierControlPointModeDriver
     {
-        public BezierControlPointFreeModeDriver(BezierControlPoints controlPoints) : base(controlPoints) {}
+        public BezierControlPointFreeModeDriver(BezierControlPoint controlPoint) : base(controlPoint) {}
 
         protected override void DriveTangent0(Vector3 newPosition) {}
 

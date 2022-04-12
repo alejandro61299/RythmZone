@@ -14,7 +14,7 @@ namespace Bezier
 				t * t * t * p3;
 		}
 
-		public static Vector3 GetPoint(BezierControlPoints startPoint, BezierControlPoints endPoint, float percent)
+		public static Vector3 GetPoint(BezierControlPoint startPoint, BezierControlPoint endPoint, float percent)
 		{
 			return GetPoint(
 				startPoint.Main.Position, 
@@ -33,7 +33,7 @@ namespace Bezier
 				3f * t * t * (p3 - p2);
 		}
 		
-		public static Vector3 GetFirstDerivative(BezierControlPoints startPoint, BezierControlPoints endPoint, float percent)
+		public static Vector3 GetFirstDerivative(BezierControlPoint startPoint, BezierControlPoint endPoint, float percent)
 		{
 			return GetFirstDerivative(
 				startPoint.Main.Position,

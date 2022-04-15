@@ -11,6 +11,11 @@ namespace Bezier.ModeDriver
         {
             this.controlPoint = controlPoint;
         }
+
+        public void ForceDrive()
+        {
+            DriveTangent0(controlPoint.Tangent1.Position);
+        }
         
         private void Initialize()
         {
@@ -25,7 +30,7 @@ namespace Bezier.ModeDriver
             controlPoint.Tangent0.OnPreChangePosition -= DriveTangent1;
             controlPoint.Tangent1.OnPreChangePosition -= DriveTangent0;
         }
-        
+         
         private void DriveTangents(Vector3 newMainPosition)
         {
             Vector3 delta = newMainPosition - controlPoint.Main.Position;
@@ -47,10 +52,10 @@ namespace Bezier.ModeDriver
                 BezierPointMode.Aligned => new BezierControlPointAlignedModeDriver(controlPoint),
                 BezierPointMode.Mirrored => new BezierControlPointMirroredModeDriver(controlPoint),
                 _ => throw new ArgumentOutOfRangeException()
-            };
+            }; 
             
             driver.Initialize();
-            return driver;
+            return driver; 
         }
     }
 }

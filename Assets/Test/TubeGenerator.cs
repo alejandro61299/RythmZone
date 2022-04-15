@@ -1,62 +1,49 @@
-using System;
-using System.Collections.Generic;
+using System.Linq;
 using Bezier;
+using Bezier.Utils;
 using NaughtyAttributes;
-using UnityEditor.Build.Pipeline.Tasks;
 using UnityEngine;
+using Utils.MathR;
 
 namespace Test
 {
     [ExecuteInEditMode]
-    public class TubeMeshCurveGenerator : MonoBehaviour
+    [RequireComponent(typeof(MeshRenderer))] 
+    [RequireComponent(typeof(MeshFilter))] 
+    [RequireComponent(typeof(BezierSpline))] 
+    public class TubeGenerator : MonoBehaviour
     {
-        private static readonly Vector3 UP_VECTOR = Vector3.up;
-        private static readonly Vector3 RIGHT_VECTOR = Vector3.right;
-        private static readonly Vector3 EPSILON_VECTOR = new (float.Epsilon, float.Epsilon, float.Epsilon);
-        
-        [SerializeField] private BezierSpline _bezier;
         [SerializeField] private int _sides;
         [SerializeField] private int _segments;
         [SerializeField] private float _radius;
         
         private Mesh _mesh;
         private MeshFilter _meshFilter;
-        private MeshRenderer _meshRenderer;
+        private BezierSpline _bezier;
         private Vector3[] _circleVertices;
-        private Transform _transform;
-
-        private Vector3[] _positions;
-        private Vector3[] _directions;
+        private BezierFrame[] _bezierFrames; 
         private Vector3[] _vertices;
         private int[] _indices;
-        private Vector2[] _uv; 
+        private Vector2[] _uv;
 
         private void Awake()
         {
-            _meshFilter = GetComponent<MeshFilter>();
-            _meshFilter ??= gameObject.AddComponent<MeshFilter>();
-            _meshRenderer = GetComponent<MeshRenderer>();
-            _meshRenderer ??= gameObject.AddComponent<MeshRenderer>();
-            _transform = transform;
+            _meshFilter = gameObject.GetComponent<MeshFilter>();
+            _bezier = gameObject.GetComponent<BezierSpline>();
         }
         
         private void OnValidate()
         {
             _sides = Mathf.Max(3, _sides);
             _segments = Mathf.Max(1, _segments);
-            _transform = transform;
         }
         
-        private void Update()
-        {
-            GenerateMesh();
-        }
-        
+
         [Button("GenerateMesh")] 
         private void GenerateMesh()
         {
             GenerateCircleVertices();
-            CalculatePositionsDirections();
+            CalculateBezierFrames();
             CalculateVertices();
             CalculateIndices();
             CalculateUVs();
@@ -85,29 +72,58 @@ namespace Test
             _meshFilter.mesh = _mesh;
         }
 
-        private void CalculatePositionsDirections()
+        private void CalculateBezierFrames()
         {
-            _positions = new Vector3[_segments];
-            _directions = new Vector3[_segments];
+            float[] uValues =  GetSegmentValues();
+            Vector3[] positions = uValues.Select(_bezier.GetPosition).ToArray(); 
+            Vector3[] directions = uValues.Select(_bezier.GetDirection).ToArray();
+
+            Vector3 origin = positions.First();
+            Vector3 crvTan = directions.First();
+            Vector3 crvNormal = crvTan.PerpendicularTo();
+            Vector3 yAxis = Vector3.Cross(crvTan, crvNormal);
+            Vector3 xAxis = Vector3.Cross(yAxis, crvTan);
             
+            _bezierFrames = new BezierFrame[positions.Length];
+            _bezierFrames[0] = new BezierFrame(origin, xAxis, yAxis);
+            
+            for (int i = 0; i < positions.Length - 1; i++)
+            {
+                Vector3 v1 = positions[i + 1] - positions[i];
+                float c1 = v1.VectorScalar(v1);
+                Vector3 rLi = _bezierFrames[i].Right - (2f / c1) *  v1.VectorScalar(_bezierFrames[i].Right) * v1;
+                Vector3 tLi = directions[i] - (2f / c1) * v1.VectorScalar(directions[i]) * v1; 
+                Vector3 v2 = directions[i + 1] - tLi;
+                float c2 = v2.VectorScalar(v2);
+                Vector3 rNext = rLi - (2f / c2) * v2.VectorScalar(rLi) * v2; 
+                var sNext = Vector3.Cross(directions[i + 1], rNext);
+                BezierFrame bezierFrameNext = new BezierFrame( positions[i + 1], rNext, sNext);
+                _bezierFrames[i + 1] = bezierFrameNext;
+            }
+        }
+
+
+        private float[] GetSegmentValues()
+        {
             float percentStep = 1f / _segments;
+            float[] values = new float[_segments];
             
             for (int i = 0; i < _segments; i++)
             {
-                float percent = percentStep * i;
-                _positions[i] =  _bezier.GetPosition(percent);
-                _directions[i] =  _bezier.GetDirection(percent);
+                values[i] = percentStep * i;
             }
+
+            return values;
         }
 
         private void CalculateVertices()
         {
-            _vertices = new Vector3[_sides * _segments];
             int currentVertIndex = 0;
-            
-            for (int i = 0; i < _segments; i++)
+            _vertices = new Vector3[_sides * _segments];
+
+            foreach (BezierFrame axisOrigin in _bezierFrames)
             {
-                Vector3[] circleVertices = TransformCircleVertices(_positions[i],  Quaternion.LookRotation(_directions[i], UP_VECTOR));
+                Vector3[] circleVertices = TransformCircleVertices(axisOrigin.Position, Quaternion.LookRotation(axisOrigin.Forward, axisOrigin.Up));
                 
                 foreach (Vector3 vertex in circleVertices)
                 {
@@ -118,7 +134,7 @@ namespace Test
         
         private void CalculateIndices()
         {
-            _indices = new int[_segments * _sides * 2 * 3]; // Two triangles and 3 vertices
+            _indices = new int[_segments * _sides * 2 * 3];
 
             var currentIndicesIndex = 0;
             for (int segment = 1; segment < _segments; segment++)
@@ -164,7 +180,7 @@ namespace Test
             {
                 float x = Mathf.Cos(angle);
                 float y = Mathf.Sin(angle);
-                _circleVertices[i] = -UP_VECTOR *x* _radius + RIGHT_VECTOR *y* _radius;
+                _circleVertices[i] = -Vector3.up *x* _radius + Vector3.right *y* _radius;
                 angle += angleStep;
             }
         }
@@ -184,10 +200,17 @@ namespace Test
 
         private void OnDrawGizmos()
         {
-            Gizmos.color = Color.cyan;
-            for (int i = 0; i < _positions.Length; i++)
+            if (_bezierFrames == null)
             {
-                Gizmos.DrawLine(_positions[i], _positions[i] + _directions[i] * 3f );
+                return;
+            }
+            
+            foreach (BezierFrame frame in _bezierFrames)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawLine(frame.Position, frame.Position + frame.Up * 2f);
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(frame.Position, frame.Position + frame.Right * 2f);
             }
         }
     }

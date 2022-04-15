@@ -15,7 +15,7 @@ namespace Bezier
         private const int DISPLAY_STEPS = 5;
         private const float DIRECTION_MAGNITUDE = 0.5f;
         private const float HANDLE_SIZE = 0.1f;
-        private const float PICK_SIZE = 0.12f;
+        private const float PICK_SIZE = 0.15f;
         
         private BezierSpline _bezier;
         private Transform _bezierTransform;

@@ -18,9 +18,17 @@ namespace Bezier
 
         private void Awake()
         {
-            _transform = transform; 
+            _transform = transform;
         }
-        
+
+        private void OnValidate()
+        {
+            foreach (BezierControlPoint controlPoint in _controlPoints)
+            { 
+                controlPoint.Initialize();
+            }
+        }
+
         private void Reset()
         {
             _controlPoints.Clear();
@@ -35,6 +43,9 @@ namespace Bezier
         public BezierControlPoint AddControlPoint()
         {
             BezierControlPoint controlPoint = new BezierControlPoint();
+            controlPoint.Initialize();
+            controlPoint.SetMode(BezierPointMode.Mirrored);
+            controlPoint.Tangent1.SetPoint(Vector3.right);
             _controlPoints.Add(controlPoint);
             OnAddControlPoint?.Invoke();
             return controlPoint;

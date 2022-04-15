@@ -6,9 +6,8 @@ namespace Bezier.Points
     [Serializable]
     public class BezierTangent0Point : BezierPoint
     {
-        public BezierTangent0Point(BezierControlPoint point) : base(point)
-        {
-            _color = Color.yellow;
-        }
+        public BezierTangent0Point(BezierControlPoint point) : base(point) { }
+        public override Color Color =>  Color.cyan;
+        public override float Size => 2f;
     }
 }
